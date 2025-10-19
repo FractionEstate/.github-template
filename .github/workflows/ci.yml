@@ -1,0 +1,128 @@
+name: CI
+
+# This is a template workflow file. Customize it based on your project's needs.
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Example job for linting
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Uncomment and modify based on your language/tools
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20'
+    #     cache: 'npm'
+    
+    # - name: Install dependencies
+    #   run: npm ci
+    
+    # - name: Run linter
+    #   run: npm run lint
+    
+  # Example job for building
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    # needs: lint  # Uncomment to require lint to pass first
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Uncomment and modify based on your language/tools
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20'
+    #     cache: 'npm'
+    
+    # - name: Install dependencies
+    #   run: npm ci
+    
+    # - name: Build
+    #   run: npm run build
+    
+    # - name: Upload build artifacts
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: build-artifacts
+    #     path: dist/
+    
+  # Example job for testing
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        # node-version: [18, 20]  # Add if testing multiple versions
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Uncomment and modify based on your language/tools
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20'
+    #     cache: 'npm'
+    
+    # - name: Install dependencies
+    #   run: npm ci
+    
+    # - name: Run tests
+    #   run: npm test
+    
+    # - name: Upload coverage reports
+    #   if: matrix.os == 'ubuntu-latest'
+    #   uses: codecov/codecov-action@v4
+    #   with:
+    #     files: ./coverage/lcov.info
+    #     flags: unittests
+    
+  # Example job for security scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Uncomment for npm audit
+    # - name: Setup Node.js
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: '20'
+    
+    # - name: Run npm audit
+    #   run: npm audit --production
+    
+    # Uncomment for CodeQL analysis
+    # - name: Initialize CodeQL
+    #   uses: github/codeql-action/init@v3
+    #   with:
+    #     languages: javascript
+    
+    # - name: Perform CodeQL Analysis
+    #   uses: github/codeql-action/analyze@v3

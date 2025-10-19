@@ -1,0 +1,46 @@
+# CODEOWNERS file
+# 
+# This file defines individuals or teams that are responsible for code in this repository.
+# Code owners are automatically requested for review when someone opens a pull request that modifies code that they own.
+#
+# Learn more about CODEOWNERS: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+# These owners will be requested for review on all PRs unless a later match takes precedence
+* @YOUR_ORG/core-team
+
+# GitHub configuration and workflows
+.github/ @YOUR_ORG/devops-team
+
+# Documentation
+/docs/ @YOUR_ORG/docs-team
+*.md @YOUR_ORG/docs-team
+
+# CI/CD pipelines
+/.github/workflows/ @YOUR_ORG/devops-team
+
+# Dependencies and package files
+package.json @YOUR_ORG/core-team
+package-lock.json @YOUR_ORG/core-team
+yarn.lock @YOUR_ORG/core-team
+Gemfile @YOUR_ORG/core-team
+requirements.txt @YOUR_ORG/core-team
+go.mod @YOUR_ORG/core-team
+
+# Source code by module/feature (customize based on your project)
+# /src/auth/ @YOUR_ORG/auth-team
+# /src/api/ @YOUR_ORG/api-team
+# /src/ui/ @YOUR_ORG/frontend-team
+# /src/database/ @YOUR_ORG/database-team
+
+# Tests
+# /tests/ @YOUR_ORG/qa-team
+
+# Build and deployment scripts
+/scripts/ @YOUR_ORG/devops-team
+/build/ @YOUR_ORG/devops-team
+
+# Configuration files
+*.config.js @YOUR_ORG/devops-team
+*.config.ts @YOUR_ORG/devops-team
+.env.example @YOUR_ORG/devops-team
