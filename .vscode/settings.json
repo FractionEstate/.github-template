@@ -1,0 +1,154 @@
+{
+  // Haskell Language Server (HLS) Configuration
+  "haskell.plugin.ghcide.globalOn": true,
+  "haskell.plugin.hlint.globalOn": true,
+  "haskell.plugin.hlint.diagnosticsOn": true,
+  "haskell.plugin.eval.globalOn": true,
+  "haskell.plugin.importLens.globalOn": true,
+  "haskell.plugin.retrie.globalOn": true,
+  "haskell.plugin.splice.globalOn": true,
+  "haskell.plugin.tactics.globalOn": true,
+  "haskell.plugin.class.globalOn": true,
+  "haskell.plugin.moduleName.globalOn": true,
+  "haskell.plugin.pragmas.globalOn": true,
+  "haskell.manageHLS": "GHCup",
+  "haskell.serverExecutablePath": "haskell-language-server-wrapper",
+  "haskell.serverEnvironment": {
+    "PATH": "${HOME}/.ghcup/bin:${PATH}"
+  },
+  "haskell.trace.server": "messages",
+  "haskell.formattingProvider": "fourmolu",
+  // Aiken Language Server Configuration
+  "aiken.trace.server": "messages",
+  "aiken.formatting.enable": true,
+  // Plutus-specific settings
+  "haskell.plugin.importLens.codeActionsOn": true,
+  "haskell.plugin.importLens.codeLensOn": true,
+  // File associations
+  "files.associations": {
+    "*.ak": "aiken",
+    "*.plutus": "json",
+    "plutus.json": "json",
+    "cabal.project": "cabal",
+    "cabal.project.local": "cabal",
+    "cabal.project.freeze": "cabal"
+  },
+  // Editor settings for Haskell
+  "[haskell]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "haskell.haskell",
+    "editor.rulers": [
+      80,
+      100
+    ],
+    "files.trimTrailingWhitespace": true
+  },
+  // Editor settings for Aiken
+  "[aiken]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "TxPipe.aiken",
+    "editor.rulers": [
+      80,
+      100
+    ],
+    "files.trimTrailingWhitespace": true
+  },
+  // TypeScript/JavaScript settings (for DApp development)
+  "[typescript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[javascript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[json]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  // Terminal settings
+  "terminal.integrated.env.linux": {
+    "CARDANO_NODE_SOCKET_PATH": "${HOME}/.cardano/preprod/node.socket"
+  },
+  "terminal.integrated.env.osx": {
+    "CARDANO_NODE_SOCKET_PATH": "${HOME}/.cardano/preprod/node.socket"
+  },
+  // Search exclusions
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.next": true,
+    "**/build": true,
+    "**/.aiken": true,
+    "**/plutus.json": false,
+    "**/*.plutus": false
+  },
+  // Files to watch
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/dist/**": true,
+    "**/.next/**": true,
+    "**/build/**": true
+  },
+  // Git settings
+  "git.ignoreLimitWarning": true,
+  // Copilot settings for Cardano development
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": false,
+    "markdown": true,
+    "haskell": true,
+    "aiken": true
+  },
+  // IntelliSense settings
+  "editor.suggest.snippetsPreventQuickSuggestions": false,
+  "editor.quickSuggestions": {
+    "other": "on",
+    "comments": "off",
+    "strings": "on"
+  },
+  // Cardano-specific task integration
+  "task.autoDetect": "on",
+  // Markdown settings (for documentation)
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+  // Recommended settings for blockchain development
+  "files.autoSave": "onFocusChange",
+  "editor.minimap.enabled": true,
+  "editor.renderWhitespace": "boundary",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  // Disable telemetry (optional, for privacy)
+  "telemetry.telemetryLevel": "off"
+}

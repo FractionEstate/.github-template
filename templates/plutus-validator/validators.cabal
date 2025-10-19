@@ -1,0 +1,76 @@
+cabal-version: 3.0
+name:          validators
+version:       0.1.0.0
+synopsis:      Cardano Plutus validators
+description:   Smart contract validators for Cardano blockchain
+license:       MIT
+author:        Your Name
+maintainer:    your.email@example.com
+build-type:    Simple
+
+common common-settings
+  default-language:   Haskell2010
+  default-extensions:
+    DataKinds
+    DeriveAnyClass
+    DeriveGeneric
+    DerivingStrategies
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    MultiParamTypeClasses
+    NoImplicitPrelude
+    OverloadedStrings
+    ScopedTypeVariables
+    TemplateHaskell
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+
+  ghc-options:
+    -Wall -Wcompat -Wincomplete-uni-patterns -Wredundant-constraints
+    -Wmissing-export-lists -Wmissing-deriving-strategies
+    -fno-ignore-interface-pragmas -fno-omit-interface-pragmas
+    -fobject-code -fno-specialise -fno-spec-constr
+
+library
+  import:          common-settings
+  hs-source-dirs:  src
+  exposed-modules:
+    Validators.AlwaysSucceeds
+    Validators.MyValidator
+    Utils.Serialization
+
+  build-depends:
+    , base                    >=4.16   && <5
+    , aeson
+    , bytestring
+    , cardano-api             ^>=9.4
+    , plutus-core             ^>=1.54
+    , plutus-ledger-api       ^>=1.54
+    , plutus-tx               ^>=1.54
+    , plutus-tx-plugin        ^>=1.54
+    , serialise
+    , text
+
+test-suite validators-test
+  import:         common-settings
+  type:           exitcode-stdio-1.0
+  main-is:        Spec.hs
+  hs-source-dirs: test
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    , base
+    , plutus-ledger-api
+    , plutus-tx
+    , tasty
+    , tasty-hunit
+    , validators
+
+executable serialize
+  import:         common-settings
+  main-is:        Main.hs
+  hs-source-dirs: app
+  ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+    , base
+    , validators

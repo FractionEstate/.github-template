@@ -1,0 +1,14 @@
+name = "my_validator"
+version = "0.1.0"
+license = "MIT"
+description = "Cardano smart contract validators"
+
+[repository]
+user = "your-username"
+project = "my-validator"
+platform = "github"
+
+[[dependencies]]
+name = "aiken-lang/stdlib"
+version = "2.1.0"
+source = "github"

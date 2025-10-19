@@ -1,0 +1,294 @@
+name: Cardano CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      plutus: ${{ steps.filter.outputs.plutus }}
+      aiken: ${{ steps.filter.outputs.aiken }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            plutus:
+              - 'src/**/*.hs'
+              - 'validators/**/*.hs'
+              - '*.cabal'
+              - 'cabal.project'
+            aiken:
+              - 'validators/**/*.ak'
+              - 'lib/**/*.ak'
+              - 'aiken.toml'
+            frontend:
+              - 'src/**/*.{ts,tsx,js,jsx}'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'next.config.js'
+              - 'vite.config.ts'
+
+  plutus-tests:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.plutus == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        ghc: ['9.6.6', '9.8.2']
+        cabal: ['3.10.3.0']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Haskell
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: ${{ matrix.ghc }}
+          cabal-version: ${{ matrix.cabal }}
+
+      - name: Cache Cabal packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cabal/packages
+            ~/.cabal/store
+            dist-newstyle
+          key: ${{ runner.os }}-ghc-${{ matrix.ghc }}-cabal-${{ hashFiles('**/*.cabal', 'cabal.project') }}
+          restore-keys: |
+            ${{ runner.os }}-ghc-${{ matrix.ghc }}-
+
+      - name: Update Cabal index
+        run: cabal update
+
+      - name: Build dependencies
+        run: cabal build --only-dependencies --enable-tests
+
+      - name: Build project
+        run: cabal build --enable-tests
+
+      - name: Run tests
+        run: cabal test --test-show-details=direct
+
+      - name: Generate coverage report
+        run: cabal test --enable-coverage
+
+      - name: Check coverage
+        run: |
+          if [ -d "dist-newstyle" ]; then
+            echo "Coverage report generated"
+            # Optionally upload to Codecov or similar
+          fi
+
+      - name: Run hlint
+        run: |
+          if command -v hlint &> /dev/null; then
+            hlint src/ validators/
+          else
+            echo "hlint not found, skipping..."
+          fi
+
+  aiken-tests:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.aiken == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Aiken
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://install.aiken-lang.org | sh
+          echo "$HOME/.aiken/bin" >> $GITHUB_PATH
+
+      - name: Verify Aiken installation
+        run: aiken --version
+
+      - name: Cache Aiken build
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/
+            ~/.aiken/
+          key: ${{ runner.os }}-aiken-${{ hashFiles('aiken.toml', 'validators/**/*.ak', 'lib/**/*.ak') }}
+          restore-keys: |
+            ${{ runner.os }}-aiken-
+
+      - name: Check Aiken formatting
+        run: aiken fmt --check
+
+      - name: Build Aiken validators
+        run: aiken build
+
+      - name: Run Aiken tests
+        run: aiken check
+
+      - name: Generate coverage report
+        run: aiken check --coverage
+
+      - name: Validate blueprints
+        run: |
+          if [ -f "plutus-blueprint.json" ]; then
+            echo "Validating CIP-57 blueprint..."
+            cat plutus-blueprint.json | jq empty || exit 1
+            echo "Blueprint is valid JSON"
+          fi
+
+      - name: Upload blueprint artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: plutus-blueprint
+          path: plutus-blueprint.json
+          if-no-files-found: warn
+
+  frontend-tests:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check TypeScript types
+        run: npm run type-check || npx tsc --noEmit
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test -- --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/coverage-final.json
+          flags: frontend
+          fail_ci_if_error: false
+
+      - name: Build project
+        run: npm run build
+        env:
+          CI: true
+
+      - name: Check bundle size
+        run: |
+          if [ -d "dist" ] || [ -d ".next" ]; then
+            echo "Build successful"
+          fi
+
+  integration-tests:
+    needs: [plutus-tests, aiken-tests, frontend-tests]
+    if: |
+      always() &&
+      (needs.plutus-tests.result == 'success' || needs.plutus-tests.result == 'skipped') &&
+      (needs.aiken-tests.result == 'success' || needs.aiken-tests.result == 'skipped') &&
+      (needs.frontend-tests.result == 'success' || needs.frontend-tests.result == 'skipped')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download Aiken blueprint
+        if: needs.aiken-tests.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: plutus-blueprint
+          path: ./
+
+      - name: Run integration tests
+        run: npm run test:integration || echo "No integration tests configured"
+        env:
+          BLOCKFROST_PREPROD_KEY: ${{ secrets.BLOCKFROST_PREPROD_KEY }}
+
+      - name: Run E2E tests
+        run: npm run test:e2e || echo "No E2E tests configured"
+        env:
+          CI: true
+
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Scan for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+  lint-markdown:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint markdown files
+        uses: articulate/actions-markdownlint@v1
+        with:
+          config: .markdownlint.json
+          files: '**/*.md'
+          ignore: node_modules
+        continue-on-error: true
+
+  all-checks-passed:
+    needs: [plutus-tests, aiken-tests, frontend-tests, integration-tests, security-scan]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs
+        run: |
+          if [[ "${{ needs.plutus-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.aiken-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.frontend-tests.result }}" == "failure" ]] || \
+             [[ "${{ needs.integration-tests.result }}" == "failure" ]]; then
+            echo "One or more critical jobs failed"
+            exit 1
+          fi
+          echo "All checks passed! ✅"

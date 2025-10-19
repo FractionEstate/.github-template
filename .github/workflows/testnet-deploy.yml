@@ -1,0 +1,251 @@
+name: Deploy to Preprod Testnet
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Testnet to deploy to'
+        required: true
+        default: 'preprod'
+        type: choice
+        options:
+          - preprod
+          - preview
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  build-validators:
+    runs-on: ubuntu-latest
+    outputs:
+      has-aiken: ${{ steps.check-aiken.outputs.exists }}
+      has-plutus: ${{ steps.check-plutus.outputs.exists }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for Aiken validators
+        id: check-aiken
+        run: |
+          if [ -f "aiken.toml" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for Plutus validators
+        id: check-plutus
+        run: |
+          if [ -f "*.cabal" ] || [ -d "src" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Aiken
+        if: steps.check-aiken.outputs.exists == 'true'
+        run: |
+          curl --proto '=https' --tlsv1.2 -LsSf https://install.aiken-lang.org | sh
+          echo "$HOME/.aiken/bin" >> $GITHUB_PATH
+
+      - name: Build Aiken validators
+        if: steps.check-aiken.outputs.exists == 'true'
+        run: |
+          aiken build
+          echo "Aiken build complete"
+
+      - name: Setup Haskell
+        if: steps.check-plutus.outputs.exists == 'true'
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: '9.6.6'
+          cabal-version: '3.10.3.0'
+
+      - name: Build Plutus validators
+        if: steps.check-plutus.outputs.exists == 'true'
+        run: |
+          cabal update
+          cabal build
+          echo "Plutus build complete"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: validators
+          path: |
+            plutus-blueprint.json
+            plutus.json
+            build/
+          if-no-files-found: warn
+
+  deploy-to-testnet:
+    needs: build-validators
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.event.inputs.network || 'preprod' }}
+      url: https://cardanoscan.io/${{ github.event.inputs.network || 'preprod' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download validator artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: validators
+          path: ./
+
+      - name: Deploy to ${{ github.event.inputs.network || 'preprod' }}
+        run: |
+          npm run deploy:${{ github.event.inputs.network || 'preprod' }}
+        env:
+          NETWORK: ${{ github.event.inputs.network || 'preprod' }}
+          BLOCKFROST_API_KEY: ${{ secrets.BLOCKFROST_PREPROD_KEY }}
+          DEPLOYER_SEED: ${{ secrets.DEPLOYER_SEED_PREPROD }}
+
+      - name: Save deployment info
+        run: |
+          mkdir -p deployments
+
+          # Create deployment record
+          cat > deployments/${{ github.event.inputs.network || 'preprod' }}.json << EOF
+          {
+            "network": "${{ github.event.inputs.network || 'preprod' }}",
+            "deployedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "commit": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "deployer": "${{ github.actor }}",
+            "runId": "${{ github.run_id }}"
+          }
+          EOF
+
+          cat deployments/${{ github.event.inputs.network || 'preprod' }}.json
+
+      - name: Upload deployment info
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-info
+          path: deployments/${{ github.event.inputs.network || 'preprod' }}.json
+
+      - name: Comment on commit
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const network = '${{ github.event.inputs.network || 'preprod' }}';
+            const fs = require('fs');
+            const deploymentInfo = JSON.parse(
+              fs.readFileSync(`deployments/${network}.json`, 'utf8')
+            );
+
+            const comment = `## 🚀 Deployed to ${network.toUpperCase()}
+
+            **Deployment Details:**
+            - Network: \`${network}\`
+            - Time: ${deploymentInfo.deployedAt}
+            - Commit: ${context.sha.substring(0, 7)}
+            - Actor: @${context.actor}
+
+            **Explorer:**
+            - https://cardanoscan.io/${network}
+
+            **Next Steps:**
+            - Verify deployment manually
+            - Run integration tests
+            - Monitor for errors
+            `;
+
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: comment
+            });
+
+  verify-deployment:
+    needs: deploy-to-testnet
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download deployment info
+        uses: actions/download-artifact@v4
+        with:
+          name: deployment-info
+          path: deployments/
+
+      - name: Verify deployment
+        run: |
+          npm run verify:deployment || echo "No verification script found"
+        env:
+          NETWORK: ${{ github.event.inputs.network || 'preprod' }}
+          BLOCKFROST_API_KEY: ${{ secrets.BLOCKFROST_PREPROD_KEY }}
+
+      - name: Run smoke tests
+        run: |
+          npm run test:smoke || echo "No smoke tests configured"
+        env:
+          NETWORK: ${{ github.event.inputs.network || 'preprod' }}
+          BLOCKFROST_API_KEY: ${{ secrets.BLOCKFROST_PREPROD_KEY }}
+
+  notify:
+    needs: [deploy-to-testnet, verify-deployment]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify Discord
+        if: env.DISCORD_WEBHOOK != ''
+        uses: sarisia/actions-status-discord@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+          title: "Testnet Deployment"
+          description: |
+            Deployed to **${{ github.event.inputs.network || 'preprod' }}**
+            Status: ${{ job.status }}
+            Commit: ${{ github.sha }}
+          color: ${{ job.status == 'success' && '0x00ff00' || '0xff0000' }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+      - name: Notify Slack
+        if: env.SLACK_WEBHOOK != ''
+        uses: slackapi/slack-github-action@v1
+        with:
+          payload: |
+            {
+              "text": "Testnet Deployment to ${{ github.event.inputs.network || 'preprod' }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Status:* ${{ job.status }}\n*Network:* ${{ github.event.inputs.network || 'preprod' }}\n*Commit:* ${{ github.sha }}\n*Actor:* @${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}

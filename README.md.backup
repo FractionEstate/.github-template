@@ -1,0 +1,160 @@
+# .github Template
+
+A comprehensive `.github` directory template for new projects. This template provides community health files, issue/PR templates, GitHub Copilot prompts, coding instructions, and CI workflows to help teams maintain consistency and leverage AI assistance effectively.
+
+## 📋 What's Included
+
+### Community Files
+- **CONTRIBUTING.md** - Contribution guidelines and PR checklist
+- **CODE_OF_CONDUCT.md** - Community standards and reporting
+- **SECURITY.md** - Security vulnerability reporting process
+- **SUPPORT.md** - Getting help and support channels
+- **FUNDING.yml** - Sponsorship and funding links
+
+### Issue & PR Templates
+- **PULL_REQUEST_TEMPLATE.md** - Standard PR description template
+- **ISSUE_TEMPLATE/** - Bug reports, feature requests, and questions
+  - `bug_report.md` - Bug report template
+  - `feature_request.md` - Feature request template
+  - `question.md` - General question template
+  - `config.yml` - Issue template configuration
+
+### GitHub Copilot Prompts (`.github/prompts/`)
+
+Reusable prompt snippets that guide AI coding assistants (13 prompts):
+
+**Planning & Implementation:**
+- **plan.prompt.md** - Create balanced implementation plans
+- **plan-fast.prompt.md** - Quick planning for simple tasks
+- **plan-deep.prompt.md** - Detailed planning with clarifying questions
+- **implement.prompt.md** - Execute plans with production-quality code
+
+**Issue & Bug Management:**
+- **bug-triage.prompt.md** - Gather bug report details
+- **fixIssueNo.prompt.md** - Analyze and solve GitHub issues
+
+**Code Generation & Quality:**
+- **component.prompt.md** - Generate components following project patterns
+- **data.prompt.md** - Analyze data structures and schemas
+- **no-any.prompt.md** - Eliminate TypeScript `any` types
+
+**Testing & Environment:**
+- **playwright.prompt.md** - Write end-to-end tests with Playwright
+- **setup-environment.prompt.md** - Guide new contributor onboarding
+
+**Maintenance:**
+- **codenotify.prompt.md** - Add contributions to CODENOTIFY file
+- **update-instructions.prompt.md** - Maintain instruction files
+
+Learn more: [GitHub Copilot Prompt Snippets](https://aka.ms/vscode-ghcp-prompt-snippets)
+
+### Coding Instructions (`.github/instructions/`)
+
+Automatically attached guidelines that teach AI assistants project-specific patterns:
+
+- **code-guidelines.instructions.md** - Core coding conventions (applies to `src/**/*.{ts,tsx,js,jsx,py,rb,go}`)
+- **testing.instructions.md** - Testing expectations (applies to `**/*.{spec,test}.*`)
+- **release-process.instructions.md** - Release workflow (applies to `.github/workflows/release/**`)
+
+Learn more: [GitHub Copilot Custom Instructions](https://aka.ms/vscode-ghcp-custom-instructions)
+
+### GitHub Actions Workflows (`.github/workflows/`)
+
+- **ci.yml** - Multi-language CI pipeline (Node.js and Python support)
+
+## 🚀 Usage
+
+### Option 1: Copy the Entire `.github` Directory
+
+```bash
+# Clone this template
+git clone https://github.com/FractionEstate/.github-template.git
+
+# Copy to your project
+cp -r .github-template/.github /path/to/your/project/
+
+# Customize the files
+cd /path/to/your/project/.github
+```
+
+### Option 2: Use as a GitHub Template Repository
+
+1. Click "Use this template" on GitHub
+2. Create a new repository
+3. Copy the `.github` folder to your actual project
+
+### Option 3: Cherry-Pick Specific Files
+
+Copy only what you need:
+
+```bash
+# Just the prompts
+cp -r .github-template/.github/prompts /path/to/your/project/.github/
+
+# Just the instructions
+cp -r .github-template/.github/instructions /path/to/your/project/.github/
+
+# Just community files
+cp .github-template/.github/{CONTRIBUTING,SECURITY,CODE_OF_CONDUCT}.md /path/to/your/project/.github/
+```
+
+## ✏️ Customization Guide
+
+After copying the template, customize these placeholders:
+
+1. **Replace repository-specific values:**
+   - `OWNER` → Your GitHub username or organization
+   - `REPO` → Your repository name
+   - `REPO_OWNER` → Your organization domain or contact
+
+2. **Update file patterns in instructions:**
+   - Edit `applyTo` patterns in `.instructions.md` files to match your project structure
+   - Examples: `src/**/*.ts`, `lib/**/*.py`, `tests/**/*.spec.js`
+
+3. **Customize prompts and instructions:**
+   - Add project-specific coding conventions to `code-guidelines.instructions.md`
+   - Document your test setup in `testing.instructions.md`
+   - Fill in release steps in `release-process.instructions.md`
+   - **Customize prompt tools:** Some prompts include MCP server references (e.g., `microsoft/playwright-mcp/*`). Remove or replace these with standard tools if you're not using those MCP servers.
+
+4. **Configure CI workflow:**
+   - Adjust Node.js/Python versions in `workflows/ci.yml`
+   - Add language-specific steps for Go, Ruby, Rust, etc.
+   - Configure deployment steps if needed
+
+5. **Update issue templates:**
+   - Modify labels in issue templates to match your repo labels
+   - Update discussion links in `ISSUE_TEMPLATE/config.yml`
+
+## 🧪 Testing the Setup
+
+1. **Verify GitHub recognizes templates:**
+   - Create a new issue → templates should appear
+   - Create a new PR → template should auto-populate
+
+2. **Test Copilot prompts:**
+   - In VS Code with GitHub Copilot, type `#` in chat
+   - Your custom prompts should appear in autocomplete
+
+3. **Test instructions:**
+   - Edit a file matching an `applyTo` pattern
+   - Ask Copilot about coding standards → it should reference your instructions
+
+4. **Verify CI workflow:**
+   - Push a commit or open a PR
+   - Check the Actions tab for workflow runs
+
+## 📚 Learn More
+
+- [GitHub Community Health Files](https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions)
+- [GitHub Issue & PR Templates](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests)
+- [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
+- [VS Code .github Reference](https://github.com/microsoft/vscode/tree/main/.github)
+
+## 🤝 Contributing
+
+Contributions welcome! If you've created useful prompts or instructions, please open a PR to share them with the community.
+
+## 📄 License
+
+This template is provided as-is for public use. Customize freely for your projects.

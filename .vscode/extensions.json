@@ -1,0 +1,33 @@
+{
+  "recommendations": [
+    // Haskell Development
+    "haskell.haskell",
+    "justusadam.language-haskell",
+    // Aiken Development
+    "txpipe.aiken",
+    // TypeScript/JavaScript (DApp Development)
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    // GitHub Copilot (AI Assistance)
+    "github.copilot",
+    "github.copilot-chat",
+    // Git & GitHub
+    "github.vscode-pull-request-github",
+    "eamodio.gitlens",
+    // Markdown & Documentation
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+    // JSON & YAML
+    "redhat.vscode-yaml",
+    // Docker (for cardano-node)
+    "ms-azuretools.vscode-docker",
+    // Testing
+    "orta.vscode-jest",
+    // Utilities
+    "streetsidesoftware.code-spell-checker",
+    "editorconfig.editorconfig",
+    "gruntfuggly.todo-tree",
+    "ms-vscode.live-server"
+  ],
+  "unwantedRecommendations": []
+}

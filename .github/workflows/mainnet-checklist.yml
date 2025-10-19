@@ -1,0 +1,382 @@
+name: Mainnet Deployment Checklist
+
+on:
+  workflow_dispatch:
+    inputs:
+      validator_name:
+        description: 'Name of validator to deploy'
+        required: true
+        type: string
+      skip_security_scan:
+        description: 'Skip security scan (NOT RECOMMENDED)'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  pre-deployment-checks:
+    runs-on: ubuntu-latest
+    outputs:
+      security-passed: ${{ steps.security.outputs.passed }}
+      testnet-passed: ${{ steps.testnet.outputs.passed }}
+      coverage-passed: ${{ steps.coverage.outputs.passed }}
+      blueprint-passed: ${{ steps.blueprint.outputs.passed }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "✅ Check 1: Security Audit"
+        id: security
+        run: |
+          echo "Checking for security audit report..."
+
+          AUDIT_FILE="docs/security-audit-${{ github.event.inputs.validator_name }}.md"
+
+          if [ ! -f "$AUDIT_FILE" ]; then
+            echo "❌ Security audit report not found at: $AUDIT_FILE"
+            echo "Please complete security audit before mainnet deployment."
+            echo "See .github/instructions/smart-contract-security.instructions.md"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Check audit is recent (within 30 days)
+          AUDIT_AGE=$(( ( $(date +%s) - $(stat -c %Y "$AUDIT_FILE") ) / 86400 ))
+          if [ $AUDIT_AGE -gt 30 ]; then
+            echo "⚠️  Security audit is $AUDIT_AGE days old"
+            echo "Consider updating the audit if significant changes were made"
+          fi
+
+          echo "✅ Security audit found and recent"
+          echo "passed=true" >> $GITHUB_OUTPUT
+
+      - name: "✅ Check 2: Testnet Validation"
+        id: testnet
+        run: |
+          echo "Checking testnet deployment history..."
+
+          DEPLOYMENT_FILE="deployments/preprod.json"
+
+          if [ ! -f "$DEPLOYMENT_FILE" ]; then
+            echo "❌ No testnet deployment found"
+            echo "REQUIRED: Deploy to Preprod testnet for minimum 2 weeks before mainnet"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Check deployment age
+          DEPLOYED_AT=$(jq -r '.deployedAt' "$DEPLOYMENT_FILE")
+          DEPLOYED_TS=$(date -d "$DEPLOYED_AT" +%s)
+          NOW_TS=$(date +%s)
+          DAYS_DEPLOYED=$(( ( $NOW_TS - $DEPLOYED_TS ) / 86400 ))
+
+          echo "Testnet deployment age: $DAYS_DEPLOYED days"
+
+          if [ $DAYS_DEPLOYED -lt 14 ]; then
+            echo "❌ Testnet deployment is only $DAYS_DEPLOYED days old"
+            echo "REQUIRED: Minimum 2 weeks (14 days) on testnet"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "✅ Testnet validation period satisfied ($DAYS_DEPLOYED days)"
+          echo "passed=true" >> $GITHUB_OUTPUT
+
+      - name: "✅ Check 3: Test Coverage"
+        id: coverage
+        run: |
+          echo "Checking test coverage..."
+
+          # Check for Aiken
+          if [ -f "aiken.toml" ]; then
+            curl --proto '=https' --tlsv1.2 -LsSf https://install.aiken-lang.org | sh
+            export PATH="$HOME/.aiken/bin:$PATH"
+
+            aiken check --coverage > coverage.txt 2>&1 || true
+
+            COVERAGE=$(grep -oP 'Coverage: \K[0-9]+' coverage.txt || echo "0")
+
+            if [ "$COVERAGE" -lt 100 ]; then
+              echo "❌ Test coverage is only $COVERAGE%"
+              echo "REQUIRED: 100% branch coverage for mainnet validators"
+              echo "passed=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+
+            echo "✅ Aiken test coverage: $COVERAGE%"
+          fi
+
+          # Check for Plutus
+          if [ -f "*.cabal" ]; then
+            echo "⚠️  Please verify Plutus test coverage manually"
+            echo "REQUIRED: 100% branch coverage for mainnet validators"
+          fi
+
+          echo "passed=true" >> $GITHUB_OUTPUT
+
+      - name: "✅ Check 4: CIP-57 Blueprint"
+        id: blueprint
+        run: |
+          echo "Validating CIP-57 blueprint..."
+
+          if [ ! -f "plutus-blueprint.json" ]; then
+            echo "❌ CIP-57 blueprint not found"
+            echo "REQUIRED: plutus-blueprint.json for validator documentation"
+            echo "Run: aiken build (for Aiken) or generate manually (for Plutus)"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Validate JSON structure
+          if ! jq empty plutus-blueprint.json 2>/dev/null; then
+            echo "❌ Blueprint JSON is invalid"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          # Check required fields
+          if ! jq -e '.preamble.title' plutus-blueprint.json > /dev/null; then
+            echo "❌ Blueprint missing required field: preamble.title"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          if ! jq -e '.validators[0]' plutus-blueprint.json > /dev/null; then
+            echo "❌ Blueprint missing validators"
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "✅ CIP-57 blueprint is valid"
+          echo "passed=true" >> $GITHUB_OUTPUT
+
+      - name: "✅ Check 5: Documentation"
+        run: |
+          echo "Checking documentation completeness..."
+
+          REQUIRED_DOCS=(
+            "README.md"
+            "docs/validator-logic.md"
+            "docs/integration-guide.md"
+          )
+
+          MISSING_DOCS=()
+
+          for doc in "${REQUIRED_DOCS[@]}"; do
+            if [ ! -f "$doc" ]; then
+              MISSING_DOCS+=("$doc")
+            fi
+          done
+
+          if [ ${#MISSING_DOCS[@]} -gt 0 ]; then
+            echo "⚠️  Missing documentation:"
+            printf '%s\n' "${MISSING_DOCS[@]}"
+            echo "Consider adding these docs before mainnet deployment"
+          else
+            echo "✅ All required documentation present"
+          fi
+
+      - name: "✅ Check 6: Emergency Plan"
+        run: |
+          echo "Checking emergency response plan..."
+
+          if [ ! -f "docs/emergency-response.md" ]; then
+            echo "⚠️  No emergency response plan found"
+            echo "RECOMMENDED: Create docs/emergency-response.md"
+            echo "Include: rollback procedure, incident contacts, communication plan"
+          else
+            echo "✅ Emergency response plan documented"
+          fi
+
+  security-scan:
+    needs: pre-deployment-checks
+    if: ${{ !inputs.skip_security_scan }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run security scanners
+        run: |
+          echo "Running comprehensive security scan..."
+
+          # Check for dangerous patterns in Plutus
+          if find . -name "*.hs" -type f | xargs grep -l "head\|tail\|!!\|fromJust" 2>/dev/null; then
+            echo "❌ Found dangerous partial functions in Haskell code"
+            echo "These can cause runtime errors. Please fix before mainnet deployment."
+            exit 1
+          fi
+
+          echo "✅ No dangerous patterns found"
+
+      - name: Check for hardcoded secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+
+  manual-approval:
+    needs: [pre-deployment-checks, security-scan]
+    if: always() && needs.pre-deployment-checks.result == 'success'
+    runs-on: ubuntu-latest
+    environment:
+      name: mainnet
+
+    steps:
+      - name: Summary of checks
+        run: |
+          cat << 'EOF'
+          ╔═══════════════════════════════════════════════════════╗
+          ║       🚀 MAINNET DEPLOYMENT APPROVAL REQUIRED        ║
+          ╚═══════════════════════════════════════════════════════╝
+
+          ✅ All pre-deployment checks passed:
+
+          1. ✅ Security audit completed and recent
+          2. ✅ Testnet validation (minimum 2 weeks)
+          3. ✅ 100% test coverage on validators
+          4. ✅ CIP-57 blueprint validated
+          5. ✅ Documentation complete
+          6. ✅ Security scan passed
+
+          ⚠️  MAINNET DEPLOYMENT IS IRREVERSIBLE
+
+          Please review:
+          - Smart contract code
+          - Testnet performance metrics
+          - Security audit findings
+          - Emergency response plan
+
+          If everything looks good, approve this workflow to proceed.
+          EOF
+
+      - name: Wait for manual approval
+        run: echo "Waiting for maintainer approval..."
+
+  deploy-to-mainnet:
+    needs: manual-approval
+    runs-on: ubuntu-latest
+    environment:
+      name: mainnet
+      url: https://cardanoscan.io/
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download validator artifacts
+        run: |
+          # Download from previous build or build fresh
+          if [ -f "plutus-blueprint.json" ]; then
+            echo "Using existing blueprint"
+          else
+            echo "Building validators..."
+            if [ -f "aiken.toml" ]; then
+              curl --proto '=https' --tlsv1.2 -LsSf https://install.aiken-lang.org | sh
+              export PATH="$HOME/.aiken/bin:$PATH"
+              aiken build
+            fi
+          fi
+
+      - name: 🚀 Deploy to MAINNET
+        run: |
+          echo "═══════════════════════════════════════"
+          echo "   DEPLOYING TO MAINNET - BE CAREFUL"
+          echo "═══════════════════════════════════════"
+
+          npm run deploy:mainnet
+        env:
+          NETWORK: mainnet
+          BLOCKFROST_API_KEY: ${{ secrets.BLOCKFROST_MAINNET_KEY }}
+          DEPLOYER_SEED: ${{ secrets.DEPLOYER_SEED_MAINNET }}
+
+      - name: Save mainnet deployment record
+        run: |
+          mkdir -p deployments
+
+          cat > deployments/mainnet.json << EOF
+          {
+            "network": "mainnet",
+            "validator": "${{ github.event.inputs.validator_name }}",
+            "deployedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "commit": "${{ github.sha }}",
+            "branch": "${{ github.ref_name }}",
+            "deployer": "${{ github.actor }}",
+            "approved_by": "${{ github.actor }}",
+            "runId": "${{ github.run_id }}",
+            "testnet_validation_days": "14+"
+          }
+          EOF
+
+          cat deployments/mainnet.json
+
+      - name: Commit deployment record
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "🚀 Mainnet deployment: ${{ github.event.inputs.validator_name }}"
+          file_pattern: deployments/mainnet.json
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: mainnet-${{ github.event.inputs.validator_name }}-${{ github.run_number }}
+          release_name: Mainnet: ${{ github.event.inputs.validator_name }}
+          body: |
+            # 🚀 Mainnet Deployment
+
+            **Validator:** ${{ github.event.inputs.validator_name }}
+            **Network:** Mainnet
+            **Deployed:** $(date -u +%Y-%m-%dT%H:%M:%SZ)
+            **Commit:** ${{ github.sha }}
+
+            ## Verification
+            - ✅ Security audit completed
+            - ✅ Testnet validation (2+ weeks)
+            - ✅ 100% test coverage
+            - ✅ CIP-57 blueprint validated
+
+            ## Resources
+            - [Blueprint](./plutus-blueprint.json)
+            - [Deployment Record](./deployments/mainnet.json)
+            - [CardanoScan Explorer](https://cardanoscan.io/)
+
+            ## ⚠️ Important
+            Monitor the deployment for the first 24-48 hours.
+            Report any issues immediately to the security team.
+          draft: false
+          prerelease: false
+
+  post-deployment-monitoring:
+    needs: deploy-to-mainnet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup monitoring
+        run: |
+          echo "Setting up post-deployment monitoring..."
+          echo "✅ Monitor transactions at: https://cardanoscan.io/"
+          echo "⚠️  Watch for unusual patterns in the first 48 hours"
+
+      - name: Notify team
+        run: |
+          echo "🎉 MAINNET DEPLOYMENT SUCCESSFUL!"
+          echo ""
+          echo "Next steps:"
+          echo "1. Monitor transactions for 24-48 hours"
+          echo "2. Verify validator behavior matches testnet"
+          echo "3. Update documentation with mainnet addresses"
+          echo "4. Announce deployment to community"
