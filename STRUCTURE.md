@@ -21,9 +21,14 @@ repository-root/
 │   │   ├── add-feature.prompt.md         # Feature implementation workflow
 │   │   ├── document-code.prompt.md       # Documentation guide
 │   │   ├── fix-bug.prompt.md             # Bug fixing workflow
+│   │   ├── implement.prompt.md           # General implementation guide
+│   │   ├── plan.prompt.md                # Task planning workflow
+│   │   ├── plan-deep.prompt.md           # Detailed planning with clarification
+│   │   ├── plan-fast.prompt.md           # Quick planning for simple tasks
 │   │   ├── refactor-code.prompt.md       # Refactoring patterns
 │   │   ├── review-code.prompt.md         # Code review checklist
 │   │   ├── setup-project.prompt.md       # Project setup workflow
+│   │   ├── update-instructions.prompt.md # Update instruction files
 │   │   └── write-tests.prompt.md         # Test writing guide
 │   │
 │   ├── workflows/
@@ -71,6 +76,10 @@ repository-root/
 
 | File | Use Case |
 |------|----------|
+| `plan.prompt.md` | Start planning a task |
+| `plan-fast.prompt.md` | Quick planning for simple tasks |
+| `plan-deep.prompt.md` | Detailed planning with clarification |
+| `implement.prompt.md` | Implement general solutions |
 | `fix-bug.prompt.md` | Systematic bug fixing |
 | `add-feature.prompt.md` | Feature implementation |
 | `refactor-code.prompt.md` | Safe refactoring |
@@ -78,6 +87,7 @@ repository-root/
 | `review-code.prompt.md` | Thorough code reviews |
 | `document-code.prompt.md` | Documentation writing |
 | `setup-project.prompt.md` | Project initialization |
+| `update-instructions.prompt.md` | Update instruction files |
 
 ### Workflows
 
@@ -115,11 +125,11 @@ repository-root/
 
 - 📁 **4 directories** (ISSUE_TEMPLATE, instructions, prompts, workflows)
 - 📄 **19 template files** in `.github/`
-- 📝 **7 prompt workflows** for common tasks
+- 📝 **12 prompt workflows** for common tasks
 - 🔒 **3 instruction files** for best practices
 - 🚀 **1 CI/CD workflow** example
 - 📖 **4 documentation files**
 
 ---
 
-**Total**: 23 files providing a complete GitHub setup for great developer experience
+**Total**: 28 files providing a complete GitHub setup for great developer experience

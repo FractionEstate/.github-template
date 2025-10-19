@@ -12,7 +12,7 @@ This template includes:
 - 👥 **CODEOWNERS** - Automated code review assignments
 - 🔒 **Dependabot Configuration** - Automated dependency updates
 - 📚 **Coding Instructions** - Domain-specific guidelines for common patterns
-- 💡 **Copilot Prompts** - Reusable prompts for common development tasks
+- 💡 **Copilot Prompts** - Reusable prompts for common development tasks (12 workflows)
 - 🚀 **CI/CD Workflows** - Example GitHub Actions workflows
 
 ## Quick Start
@@ -122,11 +122,18 @@ Add more instruction files as needed for your project's domains.
 ### 💡 Prompts
 
 Reusable GitHub Copilot prompts for common tasks:
+- **plan.prompt.md**: Start planning a task
+- **plan-fast.prompt.md**: Quick planning for simple tasks
+- **plan-deep.prompt.md**: Detailed planning with clarification
+- **implement.prompt.md**: Implement general solutions
 - **fix-bug.prompt.md**: Systematic bug fixing workflow
 - **add-feature.prompt.md**: Feature implementation checklist
 - **refactor-code.prompt.md**: Safe refactoring patterns
 - **write-tests.prompt.md**: Comprehensive test writing guide
 - **review-code.prompt.md**: Thorough code review checklist
+- **document-code.prompt.md**: Documentation writing guide
+- **setup-project.prompt.md**: Project initialization workflow
+- **update-instructions.prompt.md**: Update instruction files
 
 ### 🚀 Workflows
 

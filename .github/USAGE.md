@@ -372,6 +372,28 @@ Build a library of instructions:
 
 Prompts in `.github/prompts/` are reusable workflows for common tasks.
 
+### Available Prompts
+
+**Planning Prompts:**
+- `plan.prompt.md` - Start planning a task with structured approach
+- `plan-fast.prompt.md` - Quick planning for straightforward tasks
+- `plan-deep.prompt.md` - Detailed planning that asks clarifying questions first
+
+**Implementation Prompts:**
+- `implement.prompt.md` - Implement general-purpose solutions following best practices
+- `add-feature.prompt.md` - Feature implementation checklist and workflow
+- `fix-bug.prompt.md` - Systematic bug fixing approach
+- `refactor-code.prompt.md` - Safe refactoring patterns and steps
+
+**Quality Assurance Prompts:**
+- `write-tests.prompt.md` - Comprehensive test writing guide
+- `review-code.prompt.md` - Thorough code review checklist
+
+**Documentation Prompts:**
+- `document-code.prompt.md` - Documentation standards and examples
+- `setup-project.prompt.md` - Complete project initialization workflow
+- `update-instructions.prompt.md` - Keep instruction files up to date
+
 ### Using a Prompt
 
 1. **Open the prompt file**: `.github/prompts/fix-bug.prompt.md`
