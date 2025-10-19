@@ -5,7 +5,7 @@ This document provides an overview of the GitHub template structure created.
 ## Directory Tree
 
 ```
-.github-template/
+repository-root/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
 │   │   ├── bug_report.md          # Bug report template
@@ -113,7 +113,7 @@ This document provides an overview of the GitHub template structure created.
 
 ## Statistics
 
-- 📁 **3 directories** (ISSUE_TEMPLATE, instructions, prompts, workflows)
+- 📁 **4 directories** (ISSUE_TEMPLATE, instructions, prompts, workflows)
 - 📄 **19 template files** in `.github/`
 - 📝 **7 prompt workflows** for common tasks
 - 🔒 **3 instruction files** for best practices
@@ -122,4 +122,4 @@ This document provides an overview of the GitHub template structure created.
 
 ---
 
-**Total**: 22 files providing a complete GitHub setup for great developer experience
+**Total**: 23 files providing a complete GitHub setup for great developer experience
