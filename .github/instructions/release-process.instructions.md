@@ -21,7 +21,7 @@ Cardano releases involve multiple components:
 
 ### For smart contracts (Plutus/Aiken)
 
-**MANDATORY before mainnet deployment**:
+#### Mandatory before mainnet deployment
 
 - [ ] ✅ Security audit completed (see `.github/instructions/smart-contract-security.instructions.md`)
 - [ ] ✅ 100% test coverage on validators
@@ -34,7 +34,8 @@ Cardano releases involve multiple components:
 - [ ] ✅ Documentation complete (validator logic, parameters, usage)
 - [ ] ✅ Emergency response plan documented
 
-**Recommended**:
+#### Recommended
+
 - [ ] Bug bounty program launched
 - [ ] Gradual rollout plan (start with limited TVL)
 - [ ] Monitoring and alerting configured
@@ -64,23 +65,12 @@ Cardano releases involve multiple components:
 
 ### Step 1: Generate deployment artifacts
 
-**Plutus**:
-
-```bash
-cabal build
 cabal run validator-script -- \
   --out validators/my-validator.plutus \
   --params "param1,param2"
-```
-
-**Aiken**:
 
 ```bash
 aiken build
-# Generates:
-# - plutus.json (compiled validators)
-# - plutus-blueprint.json (CIP-57 blueprint)
-```
 
 ### Step 2: Validate blueprint (CIP-57)
 
@@ -89,7 +79,7 @@ aiken build
 cat plutus-blueprint.json | jq .
 ```
 
-**Blueprint structure**:
+#### Blueprint structure
 
 ```json
 {
@@ -101,16 +91,12 @@ cat plutus-blueprint.json | jq .
   "validators": [
     {
       "title": "Lock Validator",
-      "datum": { "schema": { "$ref": "#/definitions/MyDatum" } },
-      "redeemer": { "schema": { "$ref": "#/definitions/MyRedeemer" } }
-    }
-  ]
 }
 ```
 
 ### Step 3: Deploy to testnet (REQUIRED)
 
-**Using Lucid Evolution**:
+#### Using Lucid Evolution
 
 ```typescript
 import { Lucid, Blockfrost } from '@lucid-evolution/lucid';
@@ -142,7 +128,7 @@ const txHash = await signed.submit();
 console.log(`Reference script: ${txHash}`);
 ```
 
-**Store deployment info**:
+#### Store deployment info
 
 ```json
 {
@@ -150,7 +136,7 @@ console.log(`Reference script: ${txHash}`);
   "deployedAt": "2024-01-15T10:30:00Z",
   "txHash": "abc123...",
   "validatorAddress": "addr_test1...",
-  "referenceScriptUtxo": "abc123#0",
+  "referenceScriptUtxo": "abc123-0",
   "policyId": "def456...",
   "deployer": "addr_test1..."
 }
@@ -158,7 +144,7 @@ console.log(`Reference script: ${txHash}`);
 
 ### Step 4: Testnet validation period
 
-**Minimum 2 weeks on Preprod**:
+#### Minimum 2 weeks on Preprod
 
 - Monitor all transactions
 - Test with real users (beta program)
@@ -166,7 +152,7 @@ console.log(`Reference script: ${txHash}`);
 - Run stress tests
 - Verify edge cases
 
-**Create testnet report**:
+#### Create testnet report
 
 ```markdown
 ## Testnet Validation Report
@@ -220,30 +206,31 @@ console.log(`🚀 MAINNET deployment: ${txHash}`);
 console.log(`🔍 Explorer: https://cardanoscan.io/transaction/${txHash}`);
 ```
 
-**Announcement template**:
+#### Announcement template
+
 ```markdown
 ## 🚀 Mainnet Launch: My Validator v1.0.0
 
 We're excited to announce the mainnet deployment of My Validator!
 
-**Deployment Details**:
+Deployment details:
 - Tx Hash: `abc123...`
 - Validator Address: `addr1...`
-- Reference Script: `abc123#0`
+- Reference Script: `abc123-0`
 - Policy ID: `def456...`
 
-**Security**:
+Security:
 - ✅ Audited by [Audit Firm]
 - ✅ 2 weeks testnet validation
 - ✅ 100% test coverage
 - ✅ Bug bounty program active
 
-**Documentation**:
+Documentation:
 - Blueprint: https://github.com/org/repo/blob/main/plutus-blueprint.json
 - User Guide: https://docs.example.com
 - API Reference: https://api.example.com
 
-**Gradual Rollout**:
+Gradual rollout:
 
 - Week 1: Max TVL 100K ADA
 - Week 2: Max TVL 500K ADA
@@ -254,7 +241,7 @@ Please report issues: security@example.com
 
 ### Step 6: Post-deployment monitoring
 
-**Set up alerts**:
+#### Set up alerts
 
 ```typescript
 // Monitor with Blockfrost webhooks
@@ -265,7 +252,7 @@ Please report issues: security@example.com
 }
 ```
 
-**Metrics to track**:
+#### Metrics to track
 
 - Transaction success rate
 - Gas usage trends
@@ -273,14 +260,14 @@ Please report issues: security@example.com
 - Total value locked (TVL)
 - Number of unique users
 
-**Emergency response plan**:
+#### Emergency response plan
 
-1. **Critical bug detected** → Pause frontend, announce via Twitter/Discord,
+1. Critical bug detected → Pause frontend, announce via Twitter/Discord,
   prepare migration
-1. **Exploit attempt** → Contact auditors, analyze attack vector, notify
+1. Exploit attempt → Contact auditors, analyze attack vector, notify
   community
-1. **Network congestion** → Increase gas fees in frontend, batch transactions
-1. **Blueprint mismatch** → Verify deployment, update documentation
+1. Network congestion → Increase gas fees in frontend, batch transactions
+1. Blueprint mismatch → Verify deployment, update documentation
 
 ## DApp releases
 
@@ -307,17 +294,20 @@ NEXT_PUBLIC_POLICY_ID=abc123...
 
 ### Step 3: Deploy to hosting
 
-**Vercel** (recommended for Next.js):
+#### Vercel (recommended for Next.js)
+
 ```bash
 vercel --prod
 ```
 
-**Netlify**:
+#### Netlify
+
 ```bash
 netlify deploy --prod
 ```
 
-**IPFS** (decentralized):
+#### IPFS (decentralized)
+
 ```bash
 npm run build
 npx ipfs-car pack out/ --output dapp.car
@@ -335,19 +325,22 @@ npx ipfs-car pack out/ --output dapp.car
 
 ## Versioning strategy
 
-Follow **Semantic Versioning** (semver):
+Follow Semantic Versioning (semver):
 
-**Smart contracts**:
+### Smart contracts
+
 - `MAJOR`: Breaking changes to validator logic or datum/redeemer structure
 - `MINOR`: New features (new validators, new endpoints)
 - `PATCH`: Bug fixes, gas optimizations
 
-**DApps**:
+### DApps
+
 - `MAJOR`: Breaking UI changes, new wallet requirements
 - `MINOR`: New features, new pages
 - `PATCH`: Bug fixes, performance improvements
 
-**Examples**:
+### Examples
+
 - `1.0.0` → `2.0.0`: Changed datum structure (BREAKING)
 - `1.0.0` → `1.1.0`: Added new unlock condition (FEATURE)
 - `1.0.0` → `1.0.1`: Fixed gas optimization (PATCH)
@@ -365,13 +358,13 @@ Follow **Semantic Versioning** (semver):
 
 ## 🚀 New Features
 
-- **Multi-sig validator** (#123): Allows M-of-N signing
-- **Batch transactions** (#145): Process multiple UTxOs in one tx
+- **Multi-sig validator** issue 123: Allows M-of-N signing
+- **Batch transactions** issue 145: Process multiple UTxOs in one tx
 
 ## 🐛 Bug Fixes
 
-- Fixed datum validation edge case (#167)
-- Resolved time range calculation issue (#178)
+- Fixed datum validation edge case issue 167
+- Resolved time range calculation issue 178
 
 ## 📝 Documentation
 
@@ -385,11 +378,11 @@ Follow **Semantic Versioning** (semver):
 
 ## 📦 Deployment
 
-**Mainnet**:
+Mainnet:
 - Validator: `addr1...`
 - Tx Hash: `abc123...`
 
-**Breaking Changes**: None
+Breaking changes: None
 
 ## 🙏 Contributors
 
@@ -398,9 +391,9 @@ Thanks to @alice, @bob, and @charlie!
 
 ## Rollback procedure
 
-**If critical bug found after mainnet deployment**:
+### If critical bug found after mainnet deployment
 
-1. **Pause frontend immediately**:
+1. Pause frontend immediately:
 
 ```typescript
 // Add to frontend
@@ -409,27 +402,27 @@ if (EMERGENCY_PAUSE) {
 }
 ```
 
-1. **Announce via all channels**:
+1. Announce via all channels:
 
 - Twitter/X
 - Discord/Telegram
 - Status page
 - Email to users
 
-1. **Assess damage**:
+1. Assess damage:
 
 - Check all transactions since deployment
 - Identify affected users
 - Calculate potential losses
 
-1. **Prepare migration**:
+1. Prepare migration:
 
 - Deploy fixed validator (new address)
 - Create migration script
 - Test migration on testnet
 - Provide user instructions
 
-1. **Execute migration**:
+1. Execute migration:
 
 ```typescript
 // Migration script
@@ -446,7 +439,7 @@ for (const utxo of oldUtxos) {
 }
 ```
 
-1. **Post-mortem**:
+1. Post-mortem:
 
 - Document what went wrong
 - Update tests to catch issue
@@ -455,7 +448,7 @@ for (const utxo of oldUtxos) {
 
 ## Continuous deployment (testnet only)
 
-#### ⚠️ NEVER auto-deploy to mainnet
+### ⚠️ NEVER auto-deploy to mainnet
 
 ```yaml
 # .github/workflows/testnet-deploy.yml
@@ -486,10 +479,10 @@ jobs:
 
 ## Resources
 
-- [Semantic Versioning](https://semver.org/)
-- [CIP-57 Blueprints](https://cips.cardano.org/cip/CIP-0057)
-- [Cardano Smart Contract Audit Guide](https://docs.cardano.org/plutus/audit/)
-- [Lucid Evolution Deployment](https://github.com/Anastasia-Labs/lucid-evolution)
+- Semantic Versioning: <https://semver.org/>
+- CIP-57 Blueprints: <https://cips.cardano.org/cip/CIP-0057>
+- Cardano Smart Contract Audit Guide: <https://docs.cardano.org/plutus/audit/>
+- Lucid Evolution Deployment: <https://github.com/Anastasia-Labs/lucid-evolution>
 
 ## Learnings
 
@@ -501,5 +494,3 @@ jobs:
   (x5)
 - **Emergency pause button is mandatory** - used twice in production (x4)
 - **Mainnet deployment is permanent** - triple-check everything (x15)
-
-```

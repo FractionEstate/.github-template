@@ -3,7 +3,9 @@ mode: agent
 description: 'Run pre-mainnet security audit checklist for Cardano smart contracts'
 tools: ['search', 'edit', 'runCommands']
 ---
-Perform comprehensive security audit before mainnet deployment.
+# Security Audit
+
+Perform a comprehensive security audit before mainnet deployment.
 
 ## Process
 

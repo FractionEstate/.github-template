@@ -84,6 +84,7 @@ cabal test
 
 ```aiken
 use aiken/transaction.{ScriptContext}
+use aiken/bytes
 
 // Your validator
 validator my_validator {
@@ -98,45 +99,45 @@ validator my_validator {
 
 // Test successful unlock
 test unlock_with_signature() {
-  let datum = Some(MyDatum { owner: #"abc123", amount: 100 })
+  let datum = Some(MyDatum { owner: bytes.from_hex("abc123"), amount: 100 })
   let redeemer = Unlock
-  let ctx = mock_context(#"abc123")
+  let ctx = mock_context(bytes.from_hex("abc123"))
 
-  my_validator.spend(datum, redeemer, #"", ctx)
+  my_validator.spend(datum, redeemer, bytes.empty(), ctx)
 }
 
 // Test unlock fails without signature
 test unlock_without_signature() fail {
-  let datum = Some(MyDatum { owner: #"abc123", amount: 100 })
+  let datum = Some(MyDatum { owner: bytes.from_hex("abc123"), amount: 100 })
   let redeemer = Unlock
-  let ctx = mock_context(#"wrong_key")
+  let ctx = mock_context(bytes.from_hex("77686f6e675f6b6579"))
 
-  my_validator.spend(datum, redeemer, #"", ctx)
+  my_validator.spend(datum, redeemer, bytes.empty(), ctx)
 }
 
 // Test update with valid amount
 test update_increases_amount() {
-  let datum = Some(MyDatum { owner: #"abc123", amount: 100 })
+  let datum = Some(MyDatum { owner: bytes.from_hex("abc123"), amount: 100 })
   let redeemer = Update { amount: 150 }
-  let ctx = mock_context(#"abc123")
+  let ctx = mock_context(bytes.from_hex("abc123"))
 
-  my_validator.spend(datum, redeemer, #"", ctx)
+  my_validator.spend(datum, redeemer, bytes.empty(), ctx)
 }
 
 // Test update fails with lower amount
 test update_fails_with_lower_amount() fail {
-  let datum = Some(MyDatum { owner: #"abc123", amount: 100 })
+  let datum = Some(MyDatum { owner: bytes.from_hex("abc123"), amount: 100 })
   let redeemer = Update { amount: 50 }
-  let ctx = mock_context(#"abc123")
+  let ctx = mock_context(bytes.from_hex("abc123"))
 
-  my_validator.spend(datum, redeemer, #"", ctx)
+  my_validator.spend(datum, redeemer, bytes.empty(), ctx)
 }
 
 // Helper function
 fn mock_context(signer: ByteArray) -> ScriptContext {
   ScriptContext {
     transaction: mock_tx(signer),
-    purpose: Spend(#"test_ref")
+    purpose: Spend(bytes.from_hex("746573745f726566"))
   }
 }
 ```
@@ -158,8 +159,6 @@ aiken check --coverage
 ### Plutus with QuickCheck
 
 ```haskell
-{-# LANGUAGE ScopedTypeVariables #-}
-
 import Test.Tasty.QuickCheck
 import Test.QuickCheck
 
@@ -192,12 +191,14 @@ prop_tests = testGroup "Property Tests"
 ### Aiken fuzzing
 
 ```aiken
+use aiken/bytes
+
 // Property test with random inputs
 test prop_amount_in_range(
   amount via int.between(1, 1000000),
   increase via int.between(1, 100)
 ) {
-  let datum = MyDatum { owner: #"test", amount: amount }
+  let datum = MyDatum { owner: bytes.from_hex("74657374"), amount: amount }
   let new_amount = amount + increase
 
   new_amount > datum.amount
@@ -477,10 +478,10 @@ Add to CI workflow:
 
 ## Resources
 
-- [Plutus Testing Guide](https://plutus.cardano.intersectmbo.org/docs/working-with-scripts/testing)
-- [Aiken Testing Documentation](https://aiken-lang.org/language-tour/tests)
-- [Lucid Evolution Examples](https://github.com/Anastasia-Labs/lucid-evolution/tree/main/packages/lucid/test)
-- [Mesh Testing Guide](https://meshjs.dev/guides/testing)
+- Plutus Testing Guide: <https://plutus.cardano.intersectmbo.org/docs/working-with-scripts/testing>
+- Aiken Testing Documentation: <https://aiken-lang.org/language-tour/tests>
+- Lucid Evolution Examples: <https://github.com/Anastasia-Labs/lucid-evolution/tree/main/packages/lucid/test>
+- Mesh Testing Guide: <https://meshjs.dev/guides/testing>
 
 ## Learnings
 
@@ -488,4 +489,3 @@ Add to CI workflow:
 - **Testnet behavior sometimes differs from mainnet** - test both environments (x3)
 - **E2E tests are slow but essential** - run them before every release (x4)
 - **Mock wallet for fast iteration** - real wallet for final validation (x6)
-```

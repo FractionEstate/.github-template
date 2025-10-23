@@ -13,10 +13,10 @@ This document defines coding standards for Cardano development across Plutus
 ### Plutus (Haskell)
 
 - **Use PlutusTx-compatible Haskell**: Not all GHC features work on-chain
-- **Prefer `{-# INLINABLE #-}`**: Mark all on-chain functions for optimization
+- Prefer marking on-chain functions as INLINABLE using the standard Haskell pragma.
 - **Avoid partial functions**: Never use `head`, `tail`, `!!` without checks
 - **Use `BuiltinData` efficiently**: Convert only at validator boundaries
-- **Banned patterns**:
+- Banned patterns:
   - `String` (use `BuiltinByteString`)
   - `error` without context (use `traceError`)
   - Recursive types without size consideration
@@ -27,7 +27,7 @@ This document defines coding standards for Cardano development across Plutus
 - **Use pattern matching extensively**: Compiler enforces exhaustiveness
 - **Leverage `expect`**: Makes code clearer than nested when expressions
 - **Use stdlib functions**: `list.has`, `dict.get` are optimized
-- **Banned patterns**:
+- Banned patterns:
   - `todo` or `fail` in production
   - Wildcard `_` in critical validation
   - Hardcoded addresses or policy IDs
@@ -40,7 +40,7 @@ This document defines coding standards for Cardano development across Plutus
 - **Use `@meshsdk/core`** for React integrations
 - **Follow CIP standards**: CIP-30 for wallets, CIP-25 for NFTs, CIP-57 for
   blueprints
-- **Banned patterns**:
+- Banned patterns:
   - Storing private keys in code
   - Hardcoded addresses (use env variables)
   - Missing wallet error handling
@@ -91,7 +91,8 @@ src/
       └── cardano.ts            -- Cardano type definitions
 ```
 
-**Naming conventions**:
+### Naming conventions
+
 - Haskell: `mkValidator`, `myValidatorHash`
 - Aiken: `my_validator`, `check_signature`
 - TypeScript: `connectWallet`, `buildTransaction`
@@ -160,13 +161,15 @@ try {
 
 ### Performance optimization
 
-**Plutus**:
-- Use `{-# INLINABLE #-}` on all on-chain functions
+#### Plutus
+
+- Use the INLINABLE pragma on all on-chain functions.
 - Minimize `BuiltinData` conversions
 - Avoid unnecessary list operations
 - Keep scripts small (every byte costs)
 
-**Aiken**:
+#### Aiken performance tips
+
 - Use stdlib functions (pre-optimized)
 - Prefer `when` over nested `if`
 - Use `expect` for guaranteed patterns
@@ -174,7 +177,8 @@ try {
 
 ### Transaction building
 
-**With Lucid Evolution**:
+#### With Lucid Evolution
+
 ```typescript
 import { Lucid, Blockfrost, Data } from '@lucid-evolution/lucid';
 
@@ -192,7 +196,8 @@ const signedTx = await tx.sign.withWallet().complete();
 const txHash = await signedTx.submit();
 ```
 
-**With Mesh**:
+#### With Mesh
+
 ```typescript
 import { MeshWallet, Transaction } from '@meshsdk/core';
 
@@ -262,10 +267,8 @@ async function connectWallet(walletName: string): Promise<WalletApi>
 
 ## Resources
 
-- [Plutus Documentation](https://plutus.cardano.intersectmbo.org/docs/)
-- [Aiken Language Guide](https://aiken-lang.org/)
-- [Lucid Evolution Docs](https://anastasia-labs.github.io/lucid-evolution/)
-- [Mesh SDK Documentation](https://meshjs.dev/)
-- [Cardano CIPs](https://cips.cardano.org/)
-
-```
+- Plutus Documentation: <https://plutus.cardano.intersectmbo.org/docs/>
+- Aiken Language Guide: <https://aiken-lang.org/>
+- Lucid Evolution Docs: <https://anastasia-labs.github.io/lucid-evolution/>
+- Mesh SDK Documentation: <https://meshjs.dev/>
+- Cardano CIPs: <https://cips.cardano.org/>

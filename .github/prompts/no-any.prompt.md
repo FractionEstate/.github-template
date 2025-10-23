@@ -3,6 +3,7 @@ mode: agent
 description: 'Eliminate type `any` and improve type safety'
 tools: ['edit', 'search']
 ---
+# No Any Types
 
 Replace loose `any` types with precise alternatives:
 

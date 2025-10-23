@@ -221,7 +221,7 @@ cardano-cli address build \
   --out-file payment.addr
 
 # Get testnet funds (faucet)
-# Visit: https://docs.cardano.org/cardano-testnet/tools/faucet/
+# Visit: <https://docs.cardano.org/cardano-testnet/tools/faucet/>
 ```
 
 ### Build and submit transaction
@@ -234,11 +234,13 @@ cardano-cli query utxo \
 
 # Build transaction
 cardano-cli transaction build \
-  --tx-in <UTXO_HASH>#<UTXO_INDEX> \
+  --tx-in TX_HASH_AND_INDEX \
   --tx-out addr_test1...+5000000 \
   --change-address $(cat payment.addr) \
   --testnet-magic 1 \
   --out-file tx.raw
+
+# Format: TX_HASH_AND_INDEX equals transaction-hash joined with # and output-index
 
 # Sign transaction
 cardano-cli transaction sign \
@@ -317,7 +319,7 @@ aiken build  # Creates plutus.json
 
 ### Get API key
 
-1. Visit [Blockfrost.io](https://blockfrost.io/)
+1. Visit Blockfrost.io: <https://blockfrost.io/>
 2. Sign up for free account
 3. Create project (Preprod/Preview/Mainnet)
 4. Copy API key
@@ -516,11 +518,11 @@ cardano-cli query utxo \
 
 ## Resources
 
-- [Cardano Node Documentation](https://github.com/IntersectMBO/cardano-node/tree/master/doc)
-- [Cardano Developer Portal](https://developers.cardano.org/)
-- [Cardano Book](https://book.world.dev.cardano.org/)
-- [Blockfrost Documentation](https://docs.blockfrost.io/)
-- [Aiken Installation Guide](https://aiken-lang.org/installation-instructions)
+- Cardano Node Documentation: <https://github.com/IntersectMBO/cardano-node/tree/master/doc>
+- Cardano Developer Portal: <https://developers.cardano.org/>
+- Cardano Book: <https://book.world.dev.cardano.org/>
+- Blockfrost Documentation: <https://docs.blockfrost.io/>
+- Aiken Installation Guide: <https://aiken-lang.org/installation-instructions>
 
 ## Learnings
 
@@ -531,4 +533,3 @@ cardano-cli query utxo \
   (x5)
 - **Aiken is faster to set up than Plutus** - good for quick prototyping
   (x3)
-```

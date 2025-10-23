@@ -3,6 +3,8 @@ mode: agent
 description: 'Generate Plutus or Aiken smart contract validators with tests and security checks'
 tools: ['new', 'edit', 'search']
 ---
+# Validator Prompt
+
 Generate a production-ready Cardano validator based on user requirements.
 
 ## Process
@@ -15,17 +17,16 @@ Generate a production-ready Cardano validator based on user requirements.
    - Security considerations
 
 2. **Choose language**:
-   - **Plutus** (Haskell): For complex logic, existing Haskell codebase, maximum compatibility
+   - **Plutus** (Haskell): For complex logic, existing Haskell codebase,
+     maximum compatibility
    - **Aiken**: For modern syntax, faster compilation, better DX, built-in testing
 
 3. **Generate validator**:
 
-   ### Plutus Template
+   **Plutus template**
+
    ```haskell
-   {-# LANGUAGE DataKinds #-}
-   {-# LANGUAGE TemplateHaskell #-}
-   {-# LANGUAGE NoImplicitPrelude #-}
-   {-# LANGUAGE OverloadedStrings #-}
+   -- LANGUAGE pragmas: DataKinds, TemplateHaskell, NoImplicitPrelude, OverloadedStrings
 
    module MyValidator where
 
@@ -43,7 +44,7 @@ Generate a production-ready Cardano validator based on user requirements.
    data MyRedeemer = Unlock | Update Integer
    PlutusTx.unstableMakeIsData ''MyRedeemer
 
-   {-# INLINABLE mkValidator #-}
+   -- INLINABLE pragma recommended here for on-chain performance
    mkValidator :: MyDatum -> MyRedeemer -> ScriptContext -> Bool
    mkValidator datum redeemer ctx = case redeemer of
      Unlock ->
@@ -59,7 +60,8 @@ Generate a production-ready Cardano validator based on user requirements.
        signedByOwner = txSignedBy info (owner datum)
    ```
 
-   ### Aiken Template
+   **Aiken template**
+
    ```aiken
    use aiken/collection/list
    use aiken/crypto.{VerificationKeyHash}
@@ -101,7 +103,8 @@ Generate a production-ready Cardano validator based on user requirements.
 
 4. **Add tests**:
 
-   ### Plutus Tests
+   **Plutus tests**
+
    ```haskell
    import Test.Tasty
    import Test.Tasty.HUnit
@@ -114,10 +117,13 @@ Generate a production-ready Cardano validator based on user requirements.
      mkValidator datum redeemer ctx @?= True
    ```
 
-   ### Aiken Tests
+   **Aiken tests**
+
    ```aiken
+   use aiken/bytes
+
    test unlock_success() {
-     let datum = Some(MyDatum { owner: #"abc", amount: 100 })
+     let datum = Some(MyDatum { owner: bytes.from_hex("616263"), amount: 100 })
      let redeemer = Unlock
      my_validator.spend(datum, redeemer, mock_utxo_ref(1), mock_tx())
    }
@@ -128,12 +134,14 @@ Generate a production-ready Cardano validator based on user requirements.
    ```
 
 5. **Add documentation**:
+
    - Explain validation logic
    - Document datum/redeemer fields
    - Provide usage examples with Lucid Evolution
    - Note security considerations
 
 6. **Security checklist**:
+
    - [ ] No partial functions (Plutus)
    - [ ] All branches validated
    - [ ] Time range checked (if applicable)
@@ -152,14 +160,14 @@ Generate a production-ready Cardano validator based on user requirements.
 ## Resources
 
 Use `semantic_search` to look up CIP standards if needed:
+
 - CIP-57 for blueprint generation
 - CIP-30 for wallet integration
 - CIP-68 for datum metadata patterns
 
 Reference these instructions:
+
 - `.github/instructions/plutus-guidelines.instructions.md`
 - `.github/instructions/aiken-guidelines.instructions.md`
 - `.github/instructions/smart-contract-security.instructions.md`
 - `.github/instructions/blockchain-testing.instructions.md`
-
-```

@@ -3,267 +3,282 @@ mode: agent
 description: 'Look up Cardano Improvement Proposals (CIPs) and generate implementation code'
 tools: ['search', 'fetch', 'new', 'edit']
 ---
-Search for and implement Cardano Improvement Proposals (CIPs).
+# CIP Lookup
+
+Use this prompt to research Cardano Improvement Proposals (CIPs) and deliver
+implementation-ready code samples.
 
 ## Process
 
-1. **Understand the request**:
-   - Which CIP number? (e.g., CIP-25, CIP-30, CIP-57)
-   - Or search by topic? (e.g., "NFT metadata", "wallet API", "blueprints")
+1. **Understand the request**
 
-2. **Search for CIP**:
+   - Identify the CIP number (for example, CIP-25, CIP-30, CIP-57).
+   - If the number is unknown, capture the topic (NFT metadata, wallet API,
+     blueprints, governance, and so on).
 
-   Use `semantic_search` with queries like:
-   - "CIP-25 NFT metadata standard"
-   - "CIP-30 wallet dApp connector"
-   - "CIP-57 Plutus blueprint"
-   - "CIP-68 datum metadata"
-   - "CIP-1694 governance voting"
+2. **Search for the CIP**
 
-   Or use `fetch_webpage`:
-   ```typescript
-   fetch_webpage([
-     'https://cips.cardano.org/cip/CIP-0025',
-     'https://cips.cardano.org/cip/CIP-0030'
-   ], 'Explain the specification')
-   ```
+   - Prefer `semantic_search` queries such as "CIP-25 NFT metadata" or
+     "CIP-57 blueprint schema".
+   - When the official text is required, call `fetch_webpage`:
 
-3. **Common CIPs reference**:
+     ```typescript
+     fetch_webpage(
+       [
+         'https://cips.cardano.org/cip/CIP-0025',
+         'https://cips.cardano.org/cip/CIP-0030'
+       ],
+       'Summarize the specification'
+     );
+     ```
 
-   ### CIP-25: NFT Metadata Standard
-   ```json
-   {
-     "721": {
-       "<policy_id>": {
-         "<asset_name>": {
-           "name": "My NFT",
-           "image": "ipfs://Qm...",
-           "mediaType": "image/png",
-           "description": "Description text",
-           "files": [...],
-           "attributes": {...}
-         }
-       }
-     }
-   }
-   ```
+3. **Extract key requirements**
 
-   ### CIP-30: Wallet dApp Connector
-   ```typescript
-   const api = await window.cardano.nami.enable();
-   const networkId = await api.getNetworkId();
-   const usedAddresses = await api.getUsedAddresses();
-   const signedTx = await api.signTx(txCBOR, true);
-   const txHash = await api.submitTx(signedTx);
-   ```
+   - Note version requirements, required fields, and breaking changes.
+   - Capture reference code from the CIP text when possible.
 
-   ### CIP-57: Plutus Blueprints
-   ```json
-   {
-     "preamble": {
-       "title": "My Validator",
-       "version": "1.0.0",
-       "plutusVersion": "v2"
-     },
-     "validators": [{
-       "title": "Lock Validator",
-       "datum": { "schema": {...} },
-       "redeemer": { "schema": {...} },
-       "compiledCode": "590a4d01..."
-     }]
-   }
-   ```
+4. **Produce implementation guidance**
 
-   ### CIP-68: Datum Metadata Standard
-   ```typescript
-   // Reference NFT (100 prefix)
-   const referenceAsset = policyId + fromText("(100)MyNFT");
+   - Provide concise code examples with inline comments for context.
+   - Highlight validation steps that guarantee CIP compliance.
+   - Mention testing guidelines and tools used (for example, `vitest`).
 
-   // User NFT (222 prefix)
-   const userAsset = policyId + fromText("(222)MyNFT");
+## Common CIPs
 
-   // Metadata stored in datum of reference NFT
-   const datum = {
-     metadata: {
-       name: "My NFT",
-       image: "ipfs://...",
-       attributes: {...}
-     },
-     version: 1
-   };
-   ```
+### CIP-25: NFT Metadata Standard
 
-   ### CIP-1694: Governance Actions
-   ```typescript
-   // Vote on proposal
-   const tx = await lucid
-     .newTx()
-     .voteGovernanceAction(
-       { txHash: proposalTxHash, index: 0 },
-       'Yes',
-       drepCredential
-     )
-     .complete();
-   ```
+```json
+{
+  "721": {
+    "<policy_id>": {
+      "<asset_name>": {
+        "name": "My NFT",
+        "image": "ipfs://Qm...",
+        "mediaType": "image/png",
+        "description": "Optional description",
+        "files": [],
+        "attributes": {}
+      }
+    }
+  }
+}
+```
 
-4. **Generate implementation** based on CIP:
+### CIP-30: Wallet dApp Connector
 
-   Example for CIP-25 NFT:
-   ```typescript
-   import { Lucid, fromText } from '@lucid-evolution/lucid';
+```typescript
+const api = await window.cardano.nami.enable();
+const networkId = await api.getNetworkId();
+const usedAddresses = await api.getUsedAddresses();
+const signedTx = await api.signTx(txCBOR, true);
+const txHash = await api.submitTx(signedTx);
+```
 
-   async function mintCIP25NFT(
-     lucid: Lucid,
-     policyId: string,
-     assetName: string,
-     metadata: {
-       name: string;
-       image: string;
-       description?: string;
-       attributes?: Record<string, any>;
-     }
-   ) {
-     const unit = policyId + fromText(assetName);
+### CIP-57: Plutus Blueprints
 
-     const cip25Metadata = {
-       721: {
-         [policyId]: {
-           [assetName]: {
-             name: metadata.name,
-             image: metadata.image,
-             ...(metadata.description && { description: metadata.description }),
-             ...(metadata.attributes && { attributes: metadata.attributes })
-           }
-         }
-       }
-     };
+```json
+{
+  "preamble": {
+    "title": "My Validator",
+    "version": "1.0.0",
+    "plutusVersion": "v2"
+  },
+  "validators": [
+    {
+      "title": "Lock Validator",
+      "datum": { "schema": {} },
+      "redeemer": { "schema": {} },
+      "compiledCode": "590a4d01..."
+    }
+  ]
+}
+```
 
-     const tx = await lucid
-       .newTx()
-       .attach.MintingPolicy(mintingPolicy)
-       .mintAssets({ [unit]: 1n })
-       .attachMetadata(721, cip25Metadata)
-       .complete();
+### CIP-68: Datum Metadata Standard
 
-     return tx;
-   }
-   ```
+```typescript
+const referenceAsset = policyId + fromText('(100)MyNFT');
+const userAsset = policyId + fromText('(222)MyNFT');
 
-   Example for CIP-30 wallet connection:
-   ```typescript
-   async function connectCIP30Wallet(walletName: string) {
-     // Check if wallet exists
-     if (!window.cardano?.[walletName]) {
-       throw new Error(`${walletName} wallet not installed`);
-     }
+const datum = {
+  metadata: {
+    name: 'My NFT',
+    image: 'ipfs://...',
+    attributes: {}
+  },
+  version: 1
+};
+```
 
-     // Enable wallet (triggers user consent)
-     const api = await window.cardano[walletName].enable();
+### CIP-1694: Governance Actions
 
-     // Validate API version
-     const apiVersion = window.cardano[walletName].apiVersion;
-     if (!apiVersion.startsWith('0.1')) {
-       console.warn(`Unsupported API version: ${apiVersion}`);
-     }
+```typescript
+const tx = await lucid
+  .newTx()
+  .voteGovernanceAction(
+    { txHash: proposalTxHash, index: 0 },
+    'Yes',
+    drepCredential
+  )
+  .complete();
+```
 
-     // Get network ID (0 = testnet, 1 = mainnet)
-     const networkId = await api.getNetworkId();
+## Implementation Patterns
 
-     // Get wallet address
-     const addresses = await api.getUsedAddresses();
-     const address = addresses[0];
+### Minting with CIP-25 metadata
 
-     return { api, address, networkId };
-   }
-   ```
+```typescript
+import { Lucid, fromText } from '@lucid-evolution/lucid';
 
-5. **Add validation** for CIP compliance:
+async function mintCIP25NFT(
+  lucid: Lucid,
+  policyId: string,
+  assetName: string,
+  metadata: {
+    name: string;
+    image: string;
+    description?: string;
+    attributes?: Record<string, unknown>;
+  }
+): Promise<Transaction>
+{
+  const unit = policyId + fromText(assetName);
 
-   ### CIP-25 Metadata Validation
-   ```typescript
-   function validateCIP25Metadata(metadata: any): boolean {
-     if (!metadata['721']) return false;
+  const cip25Metadata = {
+    721: {
+      [policyId]: {
+        [assetName]: {
+          name: metadata.name,
+          image: metadata.image,
+          ...(metadata.description && { description: metadata.description }),
+          ...(metadata.attributes && { attributes: metadata.attributes })
+        }
+      }
+    }
+  };
 
-     for (const policyId in metadata['721']) {
-       for (const assetName in metadata['721'][policyId]) {
-         const asset = metadata['721'][policyId][assetName];
+  return lucid
+    .newTx()
+    .attachMintingPolicy(mintingPolicy)
+    .mintAssets({ [unit]: 1n })
+    .attachMetadata(721, cip25Metadata)
+    .complete();
+}
+```
 
-         if (!asset.name || typeof asset.name !== 'string') return false;
-         if (!asset.image || typeof asset.image !== 'string') return false;
+### Connecting to a CIP-30 wallet
 
-         if (asset.image.startsWith('ipfs://') === false &&
-             asset.image.startsWith('https://') === false) {
-           return false;
-         }
-       }
-     }
+```typescript
+async function connectCIP30Wallet(walletName: string) {
+  if (!window.cardano?.[walletName]) {
+    throw new Error(`${walletName} wallet not installed`);
+  }
 
-     return true;
-   }
-   ```
+  const api = await window.cardano[walletName].enable();
+  const apiVersion = window.cardano[walletName].apiVersion;
 
-   ### CIP-30 Network Validation
-   ```typescript
-   async function validateNetwork(
-     api: WalletAPI,
-     expected: 'mainnet' | 'testnet'
-   ) {
-     const networkId = await api.getNetworkId();
-     const expectedId = expected === 'mainnet' ? 1 : 0;
+  if (!apiVersion.startsWith('0.1')) {
+    console.warn(`Unexpected API version: ${apiVersion}`);
+  }
 
-     if (networkId !== expectedId) {
-       throw new Error(
-         `Wrong network. Expected ${expected}, got ${networkId === 1 ? 'mainnet' : 'testnet'}`
-       );
-     }
-   }
-   ```
+  const networkId = await api.getNetworkId();
+  const [address] = await api.getUsedAddresses();
 
-## CIP Index (150+ total)
+  return { api, address, networkId };
+}
+```
 
-**Most commonly used**:
-- **CIP-5**: Bech32 address prefixes
-- **CIP-8**: Message signing
-- **CIP-14**: Asset fingerprints
-- **CIP-19**: Cardano addresses
-- **CIP-20**: Transaction message/comment
-- **CIP-25**: NFT metadata
-- **CIP-27**: CNFT community royalties
-- **CIP-30**: dApp-Wallet Web Bridge
-- **CIP-31**: Reference inputs
-- **CIP-32**: Inline datums
-- **CIP-33**: Reference scripts
-- **CIP-57**: Plutus blueprints
-- **CIP-68**: Datum metadata standard
-- **CIP-1694**: Voltaire governance
-- **CIP-1855**: Forging policy keys
+## Validation Helpers
 
-**Search by topic**:
-- NFTs: CIP-25, CIP-27, CIP-68
-- Wallets: CIP-30, CIP-8, CIP-95
-- Plutus: CIP-31, CIP-32, CIP-33, CIP-57
-- Governance: CIP-1694, CIP-1855
-- Metadata: CIP-20, CIP-25, CIP-68
+### CIP-25 metadata guard
 
-## Testing CIP compliance
+```typescript
+function validateCIP25Metadata(metadata: Record<string, unknown>): boolean {
+  if (!metadata['721']) return false;
+
+  for (const policyId of Object.keys(metadata['721'] as object)) {
+    const assets = (metadata['721'] as Record<string, unknown>)[
+      policyId
+    ] as Record<string, unknown>;
+
+    for (const assetName of Object.keys(assets)) {
+      const asset = assets[assetName] as Record<string, unknown>;
+
+      if (typeof asset.name !== 'string') return false;
+      if (typeof asset.image !== 'string') return false;
+
+      const image = asset.image as string;
+      if (!image.startsWith('ipfs://') && !image.startsWith('https://')) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+```
+
+### CIP-30 network assertion
+
+```typescript
+async function assertNetwork(
+  api: WalletAPI,
+  expected: 'mainnet' | 'testnet'
+): Promise<void>
+{
+  const networkId = await api.getNetworkId();
+  const expectedId = expected === 'mainnet' ? 1 : 0;
+
+  if (networkId !== expectedId) {
+    const actual = networkId === 1 ? 'mainnet' : 'testnet';
+    throw new Error(`Wrong network. Expected ${expected}, got ${actual}`);
+  }
+}
+```
+
+## CIP Index (selected)
+
+**Common picks**
+
+- **CIP-5**: Bech32 address prefixes.
+- **CIP-8**: Message signing specification.
+- **CIP-25**: NFT metadata layout.
+- **CIP-27**: Community royalties for NFTs.
+- **CIP-30**: Wallet web bridge API.
+- **CIP-31/32/33**: Reference inputs, inline datums, reference
+  scripts.
+- **CIP-57**: Plutus blueprint packaging.
+- **CIP-68**: Datum-backed metadata standard.
+- **CIP-95**: Multisig wallet coordination.
+- **CIP-1694**: Voltaire governance actions.
+
+**Topic search tips**
+
+- NFTs → CIP-25, CIP-27, CIP-68.
+- Wallets → CIP-8, CIP-30, CIP-95.
+- Plutus upgrades → CIP-31, CIP-32, CIP-33, CIP-57.
+- Governance → CIP-1694, CIP-1855.
+- Metadata → CIP-20, CIP-25, CIP-68.
+
+## Testing guidance
 
 ```typescript
 import { describe, it, expect } from 'vitest';
 
-describe('CIP-25 Compliance', () => {
-  it('should generate valid CIP-25 metadata', () => {
+describe('CIP-25 compliance', () => {
+  it('accepts valid metadata', () => {
     const metadata = generateCIP25Metadata('MyNFT', 'ipfs://Qm...');
     expect(validateCIP25Metadata(metadata)).toBe(true);
   });
 
-  it('should reject invalid metadata', () => {
-    const invalid = { '721': { 'policy': { 'asset': {} } } };
+  it('rejects invalid metadata', () => {
+    const invalid = { '721': { policy: { asset: {} } } };
     expect(validateCIP25Metadata(invalid)).toBe(false);
   });
 });
 
-describe('CIP-30 Wallet API', () => {
-  it('should connect to wallet', async () => {
+describe('CIP-30 wallet API', () => {
+  it('connects to a wallet', async () => {
     const { api, networkId } = await connectCIP30Wallet('nami');
     expect(api).toBeDefined();
     expect([0, 1]).toContain(networkId);
@@ -271,21 +286,11 @@ describe('CIP-30 Wallet API', () => {
 });
 ```
 
-## When to use which CIP
-
-- **Building NFT marketplace?** → CIP-25, CIP-27 (royalties), CIP-68 (advanced)
-- **Integrating wallets?** → CIP-30, CIP-95 (multi-sig)
-- **Writing smart contracts?** → CIP-57 (blueprints), CIP-31/32/33 (Plutus V2 features)
-- **Adding governance?** → CIP-1694 (voting), CIP-1855 (keys)
-- **Storing metadata?** → CIP-20 (messages), CIP-25 (NFTs), CIP-68 (datum-based)
-
 ## Resources
 
-- **CIP Repository**: https://cips.cardano.org/
-- **Search CIPs**: Use `semantic_search` with CIP number or topic
-- **Fetch CIP**: Use `fetch_webpage` with CIP URL
-
-Reference:
-- `.github/instructions/cip-compliance.instructions.md`
+- **CIP repository**: <https://cips.cardano.org/>
+- **Semantic search tips**: use CIP numbers or targeted topics.
+- **Fetching specs**: call `fetch_webpage` with the CIP URL.
+- Reference instructions: `.github/instructions/cip-compliance.instructions.md`.
 
 ```

@@ -19,7 +19,8 @@ layers.
     /          \  Unit Tests (70%) - Validator logic
    /____________\
 ```
-**Distribution**:
+
+### Distribution
 
 - **70% Unit Tests**: Validator logic, helper functions, property-based tests
 - **20% Integration Tests**: Transaction building with Lucid Evolution/Mesh
@@ -29,7 +30,7 @@ layers.
 
 ### Plutus (Haskell)
 
-**Test framework**: Tasty + HUnit + QuickCheck
+Test framework: Tasty + HUnit + QuickCheck
 
 ```haskell
 module Main where
@@ -48,7 +49,7 @@ tests = testGroup "Validator Tests"
   ]
 ```
 
-**Commands**:
+#### Commands (Plutus)
 
 ```bash
 cabal test                              # Run all tests
@@ -57,13 +58,16 @@ cabal test --test-show-details=direct   # Verbose output
 
 ### Aiken
 
-**Built-in test framework** (zero configuration):
+#### Built-in test framework (zero configuration)
 
 ```aiken
+use aiken/bytes
+
 test unlock_success() {
-  let datum = Some(MyDatum { owner: #"abc", amount: 100 })
+
+  let datum = Some(MyDatum { owner: bytes.from_hex("616263"), amount: 100 })
   let redeemer = Unlock
-  my_validator.spend(datum, redeemer, #"", mock_ctx())
+  my_validator.spend(datum, redeemer, bytes.empty(), mock_ctx())
 }
 
 test prop_amount_positive(amt via int.between(1, 1000000)) {
@@ -71,7 +75,7 @@ test prop_amount_positive(amt via int.between(1, 1000000)) {
 }
 ```
 
-**Commands**:
+#### Commands (Aiken)
 
 ```bash
 aiken check                  # Run tests
@@ -93,7 +97,7 @@ describe('Transaction Building', () => {
 });
 ```
 
-**Commands**:
+#### Commands (TypeScript)
 
 ```bash
 npm test                    # Run tests
@@ -295,7 +299,7 @@ cardano-testnet cardano \
 
 ## Coverage requirements
 
-**Mainnet deployment requires**:
+### Mainnet deployment requires
 
 - ✅ 100% branch coverage for validators
 - ✅ Property tests for all numeric operations
@@ -333,19 +337,22 @@ cardano-testnet cardano \
 
 ### Common issues
 
-**Plutus tests fail to compile**:
+#### Plutus tests fail to compile
+
 ```bash
 cabal clean
 cabal update
 cabal build --enable-tests
 ```
 
-**Aiken tests timeout**:
+#### Aiken tests timeout
+
 ```bash
 aiken check --timeout 60  # Increase timeout
 ```
 
-**Frontend tests can't find wallet**:
+#### Frontend tests cannot find wallet
+
 ```typescript
 // Mock wallet in beforeAll
 beforeAll(() => {
@@ -353,18 +360,19 @@ beforeAll(() => {
 });
 ```
 
-**E2E tests flaky on testnet**:
+#### E2E tests flaky on testnet
+
 - Increase timeouts (testnet is slower)
 - Add retry logic for network errors
 - Use stable testnet (preprod over preview)
 
 ## Resources
 
-- [Plutus Testing Guide](https://plutus.cardano.intersectmbo.org/docs/)
-- [Aiken Testing Docs](https://aiken-lang.org/language-tour/tests)
-- [Lucid Evolution Tests](https://github.com/Anastasia-Labs/lucid-evolution)
-- [Mesh Testing](https://meshjs.dev/guides/testing)
-- [Playwright Docs](https://playwright.dev/)
+- Plutus Testing Guide: <https://plutus.cardano.intersectmbo.org/docs/>
+- Aiken Testing Docs: <https://aiken-lang.org/language-tour/tests>
+- Lucid Evolution Tests: <https://github.com/Anastasia-Labs/lucid-evolution>
+- Mesh Testing: <https://meshjs.dev/guides/testing>
+- Playwright Docs: <https://playwright.dev/>
 
 ## Learnings
 
@@ -373,5 +381,3 @@ beforeAll(() => {
 - **E2E tests are slow but essential** - run before every release (x6)
 - **Mock wallets for fast iteration** - real wallets for final validation (x7)
 - **Aiken's fuzzing is powerful** - use it extensively (x4)
-
-```
